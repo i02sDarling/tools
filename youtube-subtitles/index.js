@@ -1,15 +1,28 @@
 // ==UserScript==
-// @name         Youtube Copying Selected Subtitles - Immersive Translation : 沉浸式翻译字幕复制
-// @namespace    http://tampermonkey.net/
-// @version      0.1.0
-// @description  When Youtube using Immersive Translation copies the subtitles to the clipboard, supporting before translation, after translation, or select all Youtube使用沉浸式翻译时将字幕复制到剪贴板，支持翻译前,翻译后,或者全选
+// @name         Youtube Copying Selected Subtitles - Immersive Translation
+// @name:zh   沉浸式翻译字幕复制
+// @name:zh-CN   沉浸式翻译字幕复制
+// @name:en   Youtube Copying Selected Subtitles - Immersive Translation
+// @namespace    https://github.com/i02sDarling/tools
+// @description  When Youtube using Immersive Translation copies the subtitles to the clipboard, supporting before translation, after translation, or select all Youtube
+// @description:zh-CN   使用沉浸式翻译时将字幕复制到剪贴板，支持翻译前,翻译后,或者全选
+// @description:en   When Youtube using Immersive Translation copies the subtitles to the clipboard, supporting before translation, after translation, or select all Youtube
+// @license       MIT
 // @author       i02sDarling
-// @match        https://www.youtube.com/watch?v=*
+// @version      1.2.3
+// @include      *//www.youtube.com/watch?v=*
+// @match        *://*.youtube.com/*
+// @exclude      *://accounts.youtube.com/*
+// @exclude      *://www.youtube.com/live_chat_replay*
+// @exclude      *://www.youtube.com/persist_identity*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=youtube.com
-// @grant        none
-// @name en
 // @license MIT
+// @compatible     edge
+// @compatible     firefox
+// @compatible     chrome
 // ==/UserScript==
+
+
 
 (function () {
   'use strict';
