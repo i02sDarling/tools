@@ -28,8 +28,9 @@
 (function () {
   'use strict';
   console.log("02sdarling:Running");
+  let dbstatus = false;
   let curSelect = 1;
-  const recordingType = ['Once', 'Record'];
+  let appendedString = "";
   const OutSelection = ['Ori', 'Out', 'Both'];
   const button = document.createElement('button');
   const toggleBtn = document.createElement('button');
@@ -89,12 +90,11 @@
     const domstring = TmpString.replace(/<template[^>]*>|<\/template>/g, '');
     const doc = new DOMParser().parseFromString(domstring, "text/xml");
     let span = doc.getElementsByTagName('span');
-    console.log(span);
     if (span) return span;
     console.err("Open the subtitle translate first");
     return false;
   }
-  function getText() {
+  function getLineText() {
     const span = getSpan();
     if (span) {
       if (curSelect === 2) {
@@ -106,6 +106,49 @@
     return "falut to copy";
   }
 
+  function writeText(text) {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        console.log('Copy successful：', text);
+      })
+      .catch(err => {
+        console.error('Copy failed：', err);
+      });
+  }
+  function record() {
+    console.log('dbclick')
+
+    if (!dbstatus) {//no db case start record
+
+      const span = getSpan();
+      const ori = span[0];
+      const out = span[1];
+      appendedString = "";
+      const callback = function (mutationsList, observer) {
+        for (let mutation of mutationsList) {
+          if (mutation.type === "textContent") {
+            appendedString += mutation.textContent; // 将span的textContent追加到字符串末尾
+            console.log("Appended: " + mutation.textContent + "to" + appendedString);
+            console.log("The " + mutation.textContent + " attribute was modified.");
+          }
+        }
+      };
+      this.observer = new MutationObserver(callback);
+
+      const config = { attributes: true, childList: true, subtree: true, textContent: true };
+      this.observer.observe(out, config);
+
+
+    } else {//end record
+      console.log('end recording');
+      console.log(appendedString);
+      appendedString = "";
+      this.observer.disconnect();
+    }
+
+    dbstatus = !dbstatus;
+
+  }
 
   function addClickEventWhenTargetAppears() {
     try {
@@ -117,18 +160,28 @@
       if (button.textContent === 'Waiting') {
         return;
       }
-      //const ClickContainer=doc.getElementsByClassName('captions-text');
+      //TODO:timer click
       button.addEventListener('click', function () {
 
-        let res = getText();
-        navigator.clipboard.writeText(res)
-          .then(() => {
-            console.log('Copy successful：', res);
-          })
-          .catch(err => {
-            console.error('Copy failed：', err);
-          });
+        let res = getLineText();
+        try {
+          writeText(res);
+        } catch (err) {
+          err = "";
+        }
+
       })
+      // button.addEventListener('dblclick', function () {
+      //   let res = "dbclick";
+      //   const span = getSpan();
+      //   console.log(span)
+      //   try {
+      //     writeText(res);
+      //   } catch (err) {
+      //     err = "";
+      //   }
+      // })
+      button.addEventListener('dblclick', record);
     } catch (e) {
       console.log('Waiting');
     }
