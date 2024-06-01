@@ -1,3 +1,4 @@
+
 // ==UserScript==
 // @name         Youtube Copying Selected Subtitles - Immersive Translation
 // @name:zh   沉浸式翻译字幕复制
@@ -28,6 +29,7 @@
   'use strict';
   console.log("02sdarling:Running");
   let curSelect = 1;
+  const recordingType = ['Once', 'Record'];
   const OutSelection = ['Ori', 'Out', 'Both'];
   const button = document.createElement('button');
   const toggleBtn = document.createElement('button');
@@ -37,6 +39,9 @@
 
   function toggle() {
     button.textContent = 'Copy';
+  }
+  function setButttonText(btn, text) {
+    btn.textContent = text;
   }
   function appendStyle(btn) {
     btn.style.position = 'absolute';
@@ -48,33 +53,33 @@
     btn.style.border = 'none';
     btn.style.borderRadius = '5px';
     btn.style.cursor = 'pointer';
-
   }
 
   function mkContainer() {
     button.id = '02sdarling';
-    button.textContent = 'Waiting';
+    setButttonText(button, 'Waiting');
     button.style.top = '70%';
     appendStyle(button);
     document.body.appendChild(button);
   }
   function mkToggle() {
     toggleBtn.id = '02sdarlingYa';
-    toggleBtn.textContent = OutSelection[curSelect];
+    setButttonText(toggleBtn, OutSelection[curSelect]);
     toggleBtn.style.top = '90%';
     appendStyle(toggleBtn);
     document.body.appendChild(toggleBtn);
   }
   toggleBtn.addEventListener('click', function () {
     curSelect = (curSelect + 1) % 3;
-
-
-    toggleBtn.textContent = OutSelection[curSelect];
+    setButttonText(toggleBtn, OutSelection[curSelect]);
   })
   function getSpan() {
     const ytbPlayer = document.getElementById('ytd-player');
     const TopCont = ytbPlayer.children[0];
+
     const container = TopCont.children[0].lastChild;
+
+
     if (container.id !== 'immersive-translate-caption-window') {
       console.log('Lost window container! make sure you have installed the  immersive translation and opened it. If you have already done these things, you can wait.')
       return false;
@@ -84,6 +89,7 @@
     const domstring = TmpString.replace(/<template[^>]*>|<\/template>/g, '');
     const doc = new DOMParser().parseFromString(domstring, "text/xml");
     let span = doc.getElementsByTagName('span');
+    console.log(span);
     if (span) return span;
     console.err("Open the subtitle translate first");
     return false;
