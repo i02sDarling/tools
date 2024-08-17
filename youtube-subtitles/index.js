@@ -1,4 +1,3 @@
-
 // ==UserScript==
 // @name         Youtube Copying Selected Subtitles - Immersive Translation
 // @name:zh   沉浸式翻译字幕复制
@@ -10,7 +9,7 @@
 // @description:en   When Youtube using Immersive Translation copies the subtitles to the clipboard, supporting before translation, after translation, or select all Youtube
 // @license       MIT
 // @author       i02sDarling
-// @version      1.2.3
+// @version      1.3.5
 // @include      *//www.youtube.com/watch?v=*
 // @match        *://*.youtube.com/*
 // @exclude      *://accounts.youtube.com/*
@@ -21,6 +20,8 @@
 // @compatible     edge
 // @compatible     firefox
 // @compatible     chrome
+// @downloadURL https://update.greasyfork.org/scripts/496556/Youtube%20Copying%20Selected%20Subtitles%20-%20Immersive%20Translation.user.js
+// @updateURL https://update.greasyfork.org/scripts/496556/Youtube%20Copying%20Selected%20Subtitles%20-%20Immersive%20Translation.meta.js
 // ==/UserScript==
 
 
@@ -28,9 +29,7 @@
 (function () {
   'use strict';
   console.log("02sdarling:Running");
-  let dbstatus = false;
   let curSelect = 1;
-  let appendedString = "";
   const OutSelection = ['Ori', 'Out', 'Both'];
   const button = document.createElement('button');
   const toggleBtn = document.createElement('button');
@@ -40,9 +39,6 @@
 
   function toggle() {
     button.textContent = 'Copy';
-  }
-  function setButttonText(btn, text) {
-    btn.textContent = text;
   }
   function appendStyle(btn) {
     btn.style.position = 'absolute';
@@ -54,101 +50,46 @@
     btn.style.border = 'none';
     btn.style.borderRadius = '5px';
     btn.style.cursor = 'pointer';
+
   }
 
   function mkContainer() {
     button.id = '02sdarling';
-    setButttonText(button, 'Waiting');
+    button.textContent = 'Waiting';
     button.style.top = '70%';
     appendStyle(button);
     document.body.appendChild(button);
   }
   function mkToggle() {
     toggleBtn.id = '02sdarlingYa';
-    setButttonText(toggleBtn, OutSelection[curSelect]);
+    toggleBtn.textContent = OutSelection[curSelect];
     toggleBtn.style.top = '90%';
     appendStyle(toggleBtn);
     document.body.appendChild(toggleBtn);
   }
   toggleBtn.addEventListener('click', function () {
     curSelect = (curSelect + 1) % 3;
-    setButttonText(toggleBtn, OutSelection[curSelect]);
+    toggleBtn.textContent = OutSelection[curSelect];
   })
   function getSpan() {
-    const ytbPlayer = document.getElementById('ytd-player');
-    const TopCont = ytbPlayer.children[0];
-
-    const container = TopCont.children[0].lastChild;
-
-
-    if (container.id !== 'immersive-translate-caption-window') {
-      console.log('Lost window container! make sure you have installed the  immersive translation and opened it. If you have already done these things, you can wait.')
-      return false;
-
-    }
+    const container=document.getElementById('immersive-translate-caption-window');
     const TmpString = container.getInnerHTML();
     const domstring = TmpString.replace(/<template[^>]*>|<\/template>/g, '');
-    const doc = new DOMParser().parseFromString(domstring, "text/xml");
-    let span = doc.getElementsByTagName('span');
-    if (span) return span;
-    console.err("Open the subtitle translate first");
-    return false;
+     return domstring;
   }
-  function getLineText() {
+  function getText() {
     const span = getSpan();
     if (span) {
-      if (curSelect === 2) {
-        return span[0].textContent + " " + span[1].textContent;
-      } else {
-        return span[curSelect].textContent;
-      }
+      const spanContents = span.match(/<span\b[^>]*>(.*?)<\/span>/gi);
+      const res=spanContents.map(span => {
+          const match = span.match(/>(.*?)<\/span>/); // 正则匹配 span 标签内的内容
+          return match ? match[1] : null; // 返回捕获到的文本内容
+      });
+        return res;
     }
     return "falut to copy";
   }
 
-  function writeText(text) {
-    navigator.clipboard.writeText(text)
-      .then(() => {
-        console.log('Copy successful：', text);
-      })
-      .catch(err => {
-        console.error('Copy failed：', err);
-      });
-  }
-  function record() {
-    console.log('dbclick')
-
-    if (!dbstatus) {//no db case start record
-
-      const span = getSpan();
-      const ori = span[0];
-      const out = span[1];
-      appendedString = "";
-      const callback = function (mutationsList, observer) {
-        for (let mutation of mutationsList) {
-          if (mutation.type === "textContent") {
-            appendedString += mutation.textContent; // 将span的textContent追加到字符串末尾
-            console.log("Appended: " + mutation.textContent + "to" + appendedString);
-            console.log("The " + mutation.textContent + " attribute was modified.");
-          }
-        }
-      };
-      this.observer = new MutationObserver(callback);
-
-      const config = { attributes: true, childList: true, subtree: true, textContent: true };
-      this.observer.observe(out, config);
-
-
-    } else {//end record
-      console.log('end recording');
-      console.log(appendedString);
-      appendedString = "";
-      this.observer.disconnect();
-    }
-
-    dbstatus = !dbstatus;
-
-  }
 
   function addClickEventWhenTargetAppears() {
     try {
@@ -160,28 +101,22 @@
       if (button.textContent === 'Waiting') {
         return;
       }
-      //TODO:timer click
+      //const ClickContainer=doc.getElementsByClassName('captions-text');
       button.addEventListener('click', function () {
 
-        let res = getLineText();
-        try {
-          writeText(res);
-        } catch (err) {
-          err = "";
-        }
-
+        let resArray = getText();
+        let res='';
+        if(curSelect==1) res=resArray[1];
+        else if(curSelect==2) res=resArray[0]+resArray[1];
+        else res=resArray[0];
+        navigator.clipboard.writeText(res)
+          .then(() => {
+            console.log('Copy successful：', res);
+          })
+          .catch(err => {
+            console.error('Copy failed：', err);
+          });
       })
-      // button.addEventListener('dblclick', function () {
-      //   let res = "dbclick";
-      //   const span = getSpan();
-      //   console.log(span)
-      //   try {
-      //     writeText(res);
-      //   } catch (err) {
-      //     err = "";
-      //   }
-      // })
-      button.addEventListener('dblclick', record);
     } catch (e) {
       console.log('Waiting');
     }
