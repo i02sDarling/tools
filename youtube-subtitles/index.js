@@ -5,8 +5,8 @@
 // @name:en   Youtube Copying Selected Subtitles - Immersive Translation
 // @namespace    https://github.com/i02sDarling/tools
 // @description  When Youtube using Immersive Translation copies the subtitles to the clipboard, supporting before translation, after translation, or select all Youtube
-// @description:zh-CN   使用沉浸式翻译时将字幕复制到剪贴板，支持翻译前,翻译后,或者全选
-// @description:en   When Youtube using Immersive Translation copies the subtitles to the clipboard, supporting before translation, after translation, or select all Youtube
+// @description:zh-CN   使用沉浸式翻译时将字幕复制到剪贴板，支持翻译前,翻译后,或者全选,新功能:录制译文
+// @description:en   When Youtube using Immersive Translation copies the subtitles to the clipboard, supporting before translation, after translation, or select all Youtube,new Feather:Record translate
 // @license       MIT
 // @author       i02sDarling
 // @version      1.3.5
@@ -30,7 +30,9 @@
   'use strict';
   console.log("02sdarling:Running");
   let curSelect = 1;
-  const OutSelection = ['Ori', 'Out', 'Both'];
+  let Recstatus=false;
+  let RecCache='';
+  const OutSelection = ['Ori', 'Out', 'Both','Rec'];
   const button = document.createElement('button');
   const toggleBtn = document.createElement('button');
   mkContainer();
@@ -68,8 +70,25 @@
     document.body.appendChild(toggleBtn);
   }
   toggleBtn.addEventListener('click', function () {
-    curSelect = (curSelect + 1) % 3;
-    toggleBtn.textContent = OutSelection[curSelect];
+    curSelect = (curSelect + 1) % OutSelection.length;
+    if(curSelect===3) {
+      Recstatus=true;
+      button.textContent='Start';
+      toggleBtn.textContent='Rec';
+    }
+    else {
+      Recstatus=false;
+      navigator.clipboard.writeText(RecCache)
+        .then(() => {
+          console.log('Copy successful：', RecCache);
+        })
+        .catch(err => {
+          console.error('Copy failed：', err);
+        });
+      RecCache='';
+      button.textContent='Copy';
+      toggleBtn.textContent = OutSelection[curSelect];
+    }
   })
   function getSpan() {
     const container=document.getElementById('immersive-translate-caption-window');
@@ -82,8 +101,8 @@
     if (span) {
       const spanContents = span.match(/<span\b[^>]*>(.*?)<\/span>/gi);
       const res=spanContents.map(span => {
-          const match = span.match(/>(.*?)<\/span>/); // 正则匹配 span 标签内的内容
-          return match ? match[1] : null; // 返回捕获到的文本内容
+          const match = span.match(/>(.*?)<\/span>/);
+          return match ? match[1] : null; 
       });
         return res;
     }
@@ -103,19 +122,26 @@
       }
       //const ClickContainer=doc.getElementsByClassName('captions-text');
       button.addEventListener('click', function () {
-
         let resArray = getText();
-        let res='';
-        if(curSelect==1) res=resArray[1];
-        else if(curSelect==2) res=resArray[0]+resArray[1];
-        else res=resArray[0];
-        navigator.clipboard.writeText(res)
-          .then(() => {
-            console.log('Copy successful：', res);
-          })
-          .catch(err => {
-            console.error('Copy failed：', err);
-          });
+        if(Recstatus){
+          RecCache+=resArray[1]+'\n';
+          button.textContent='Append';
+          toggleBtn.textContent='End';
+        }else{
+          let res='';
+          if(curSelect==1) res=resArray[1];
+          else if(curSelect==2) res=resArray[0]+resArray[1];
+          else res=resArray[0];
+          navigator.clipboard.writeText(res)
+            .then(() => {
+              console.log('Copy successful：', res);
+            })
+            .catch(err => {
+              console.error('Copy failed：', err);
+            });
+        }
+
+
       })
     } catch (e) {
       console.log('Waiting');
@@ -125,3 +151,6 @@
 
 
 })();
+
+
+
